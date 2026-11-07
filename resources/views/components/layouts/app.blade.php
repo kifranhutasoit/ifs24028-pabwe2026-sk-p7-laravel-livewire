@@ -44,7 +44,7 @@
                     </span>
                     <span class="text-slate-900 tracking-tight">Stock<span class="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent font-extrabold">Barang</span></span>
                 </a>
-                <button @click="sidebarOpen = false" class="md:hidden text-slate-400 hover:text-slate-600">
+                <button type="button" @click="sidebarOpen = false" aria-label="Tutup menu" class="md:hidden text-slate-400 hover:text-slate-600">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
@@ -55,7 +55,7 @@
                     @if (auth()->user()->profile_photo_path && \Illuminate\Support\Facades\Storage::disk('public')->exists(auth()->user()->profile_photo_path))
                         <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url(auth()->user()->profile_photo_path) }}" alt="{{ auth()->user()->name }}" class="w-10 h-10 rounded-full object-cover shadow-sm flex-shrink-0 border border-slate-200">
                     @else
-                        <div class="w-10 h-10 rounded-full {{ auth()->user()->isAdmin() ? 'bg-purple-600 text-purple-100' : 'bg-blue-600 text-blue-100' }} flex items-center justify-center font-bold text-sm shadow-sm flex-shrink-0">
+                        <div class="w-10 h-10 rounded-full {{ auth()->user()->isAdmin() ? 'bg-purple-700 text-white' : 'bg-blue-600 text-white' }} flex items-center justify-center font-bold text-sm shadow-sm flex-shrink-0">
                             {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
                         </div>
                     @endif
@@ -74,7 +74,7 @@
 
             <!-- Navigation Links -->
             <div class="flex-1 px-3 space-y-1 overflow-y-auto">
-                <div class="px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                <div class="px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-slate-600">
                     Menu Utama
                 </div>
 
@@ -109,7 +109,7 @@
             <div class="p-3 border-t border-slate-200">
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
-                    <button type="submit" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium text-rose-600 hover:bg-rose-50 hover:text-rose-700 transition">
+                    <button type="submit" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium text-rose-700 hover:bg-rose-50 hover:text-rose-700 transition">
                         <svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                         </svg>
@@ -123,7 +123,7 @@
         <div class="md:pl-64 flex flex-col min-h-screen">
             <!-- Top Mobile Bar -->
             <header class="md:hidden h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 sticky top-0 z-30">
-                <button @click="sidebarOpen = true" class="p-2 rounded-lg text-slate-500 hover:bg-slate-100">
+                <button type="button" @click="sidebarOpen = true" aria-label="Buka menu" class="p-2 rounded-lg text-slate-500 hover:bg-slate-100">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
                 </button>
                 <div class="flex items-center space-x-2">
@@ -155,7 +155,7 @@
                 @if (session()->has('error'))
                     <div class="mb-6 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 flex items-center justify-between shadow-sm">
                         <div class="flex items-center space-x-2">
-                            <svg class="w-5 h-5 text-rose-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <svg class="w-5 h-5 text-rose-700 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
                             </svg>
                             <span class="text-sm font-medium">{{ session('error') }}</span>
