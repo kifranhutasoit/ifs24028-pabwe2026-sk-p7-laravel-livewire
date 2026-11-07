@@ -1,10 +1,12 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full bg-slate-50">
+<html lang="id" class="h-full bg-slate-50">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="StockBarang: aplikasi pengelolaan stok barang untuk memantau jumlah, harga, dan status ketersediaan.">
     <title>{{ $title ?? 'Stock Barang' }} - PABWE 2026</title>
     <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
+    <link rel="preconnect" href="https://cdn.tailwindcss.com">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         [x-cloak] { display: none !important; }
@@ -196,6 +198,7 @@
             </header>
 
             <main class="flex-1 flex items-center justify-center p-4">
+                <h1 class="sr-only">{{ $title ?? 'Stock Barang' }}</h1>
                 {{ $slot }}
             </main>
 
