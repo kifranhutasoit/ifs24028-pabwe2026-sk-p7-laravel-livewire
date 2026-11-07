@@ -6,8 +6,7 @@
     <meta name="description" content="StockBarang: aplikasi pengelolaan stok barang untuk memantau jumlah, harga, dan status ketersediaan.">
     <title>{{ $title ?? 'Stock Barang' }} - PABWE 2026</title>
     <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
-    <link rel="preconnect" href="https://cdn.tailwindcss.com">
-    <script src="https://cdn.tailwindcss.com"></script>
+    @vite('resources/css/app.css')
     <style>
         [x-cloak] { display: none !important; }
         html:has(.modal-scroll-lock),
