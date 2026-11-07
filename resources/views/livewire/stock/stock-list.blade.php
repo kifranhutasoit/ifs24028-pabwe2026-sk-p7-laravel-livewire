@@ -1,270 +1,340 @@
 <div>
-    <style>
-        .stock-description p { margin: .5rem 0; }
-        .stock-description h1, .stock-description h2, .stock-description h3 { font-weight: 700; color: #0f172a; margin: 1.25rem 0 .5rem; }
-        .stock-description h1 { font-size: 1.5rem; }
-        .stock-description h2 { font-size: 1.25rem; }
-        .stock-description h3 { font-size: 1.1rem; }
-        .stock-description ul { list-style: disc; padding-left: 1.5rem; margin: .5rem 0; }
-        .stock-description ol { list-style: decimal; padding-left: 1.5rem; margin: .5rem 0; }
-        .stock-description a { color: #2563eb; text-decoration: underline; }
-        .stock-description blockquote { border-left: 4px solid #e2e8f0; padding-left: 1rem; color: #475569; margin: .75rem 0; }
-        .stock-description code { background: #f1f5f9; padding: .1rem .35rem; border-radius: .25rem; font-size: .85em; }
-        .stock-description pre { background: #0f172a; color: #f8fafc; padding: 1rem; border-radius: .75rem; overflow-x: auto; margin: .75rem 0; }
-        .stock-description pre code { background: transparent; padding: 0; color: inherit; }
-        .stock-description table { border-collapse: collapse; margin: .75rem 0; display: block; overflow-x: auto; }
-        .stock-description th, .stock-description td { border: 1px solid #e2e8f0; padding: .4rem .75rem; }
-        .stock-description th { background: #f8fafc; font-weight: 600; }
-    </style>
+    <!-- Top Action Bar -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900">Daftar Stok Barang Saya</h1>
+            <p class="text-sm text-slate-500 mt-1">Kelola stok, harga, dan kuantitas inventaris barang secara teratur</p>
+        </div>
 
-    <!-- Top Navigation Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <div class="flex items-center space-x-3">
-            <a href="{{ route('stocks.index') }}" class="p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-200 transition" title="Kembali ke Daftar Stok" aria-label="Kembali ke daftar stok">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        <div class="relative" x-data="{ open: false, loading: null }" @click.outside="open = false" @keydown.escape.window="open = false">
+            <button type="button" @click="open = !open" :disabled="!!loading"
+                class="inline-flex items-center justify-center w-10 h-10 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 shadow-sm transition disabled:opacity-60"
+                title="Menu aksi" aria-label="Menu aksi">
+                <svg x-show="!loading" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
                 </svg>
-            </a>
-            <div>
-                <div class="flex items-center space-x-2.5">
-                    <h1 class="text-2xl font-bold text-slate-900 truncate max-w-md sm:max-w-xl">{{ $stock->name }}</h1>
-                    <span class="px-2.5 py-0.5 text-xs font-semibold rounded-full border {{ $stock->status instanceof \App\Features\Stock\Enums\StockStatus ? $stock->status->badgeClass() : 'bg-slate-100 text-slate-700' }}">
-                        {{ $stock->status instanceof \App\Features\Stock\Enums\StockStatus ? $stock->status->label() : ucfirst((string) $stock->status) }}
+                <svg x-show="loading" x-cloak class="animate-spin w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                </svg>
+            </button>
+
+            <div x-show="open" x-cloak
+                x-transition:enter="transition ease-out duration-100"
+                x-transition:enter-start="opacity-0 scale-95"
+                x-transition:enter-end="opacity-100 scale-100"
+                x-transition:leave="transition ease-in duration-75"
+                x-transition:leave-start="opacity-100 scale-100"
+                x-transition:leave-end="opacity-0 scale-95"
+                class="absolute right-0 z-30 mt-2 w-56 origin-top-right rounded-xl border border-slate-200 bg-white py-1.5 shadow-xl shadow-slate-200/70">
+                <div class="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-600">Aksi Cepat</div>
+
+                <button type="button" :disabled="!!loading"
+                    @click="
+                        loading = 'create'; open = false;
+                        $wire.openCreateModal().finally(() => loading = null);
+                    "
+                    class="flex w-full items-center gap-2.5 px-3 py-2.5 text-sm font-semibold text-blue-700 hover:bg-blue-50 transition disabled:opacity-60">
+                    <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
+                        <svg x-show="loading !== 'create'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                        <svg x-show="loading === 'create'" x-cloak class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
                     </span>
-                    @if ($stock->sku)
-                        <span class="px-2 py-0.5 text-xs font-mono bg-slate-100 text-slate-600 rounded">
-                            {{ $stock->sku }}
-                        </span>
-                    @endif
-                </div>
-                <p class="text-xs text-slate-500 mt-0.5">Dibuat pada {{ $stock->created_at ? $stock->created_at->format('d M Y H:i') : '-' }}</p>
-            </div>
-        </div>
-
-        <div class="flex flex-wrap items-center gap-2">
-            <!-- Increment / Decrement Quantity -->
-            <div class="flex items-center space-x-1 bg-slate-100 border border-slate-200 rounded-lg p-1">
-                <button wire:click="decrementQuantity" wire:loading.attr="disabled" class="px-2.5 py-1 bg-white hover:bg-rose-50 text-slate-700 hover:text-rose-700 rounded text-xs font-bold transition shadow-xs" title="Kurangi 1">
-                    - 1
+                    Tambah Barang
                 </button>
-                <span class="px-2 font-bold text-sm text-slate-800">{{ $stock->quantity }} {{ $stock->unit ?? 'pcs' }}</span>
-                <button wire:click="incrementQuantity" wire:loading.attr="disabled" class="px-2.5 py-1 bg-white hover:bg-blue-50 text-slate-700 hover:text-blue-600 rounded text-xs font-bold transition shadow-xs" title="Tambah 1">
-                    + 1
+
+                <button type="button" :disabled="!!loading"
+                    @click="
+                        loading = 'ai'; open = false;
+                        $wire.openAiModal().finally(() => loading = null);
+                    "
+                    class="flex w-full items-center gap-2.5 px-3 py-2.5 text-sm font-semibold text-purple-700 hover:bg-purple-50 transition disabled:opacity-60">
+                    <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-100 text-purple-600">
+                        <svg x-show="loading !== 'ai'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                        <svg x-show="loading === 'ai'" x-cloak class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                    </span>
+                    Generate AI Stok
+                </button>
+
+                <div class="my-1.5 border-t border-slate-100"></div>
+                <div class="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-600">Spreadsheet</div>
+
+                <button type="button" :disabled="!!loading"
+                    @click="
+                        loading = 'import'; open = false;
+                        $wire.openImportModal().finally(() => loading = null);
+                    "
+                    class="flex w-full items-center gap-2.5 px-3 py-2.5 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 transition disabled:opacity-60">
+                    <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
+                        <svg x-show="loading !== 'import'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                        <svg x-show="loading === 'import'" x-cloak class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                    </span>
+                    Import Excel
+                </button>
+
+                <button type="button" :disabled="!!loading"
+                    @click="
+                        loading = 'export'; open = false;
+                        $wire.exportExcel().finally(() => loading = null);
+                    "
+                    class="flex w-full items-center gap-2.5 px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-100 transition disabled:opacity-60">
+                    <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
+                        <svg x-show="loading !== 'export'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                        <svg x-show="loading === 'export'" x-cloak class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                    </span>
+                    <span x-text="loading === 'export' ? 'Mengekspor...' : 'Export Excel'"></span>
                 </button>
             </div>
-
-            <!-- Edit Stock Button -->
-            <button wire:click="openEditModal" wire:loading.attr="disabled" class="inline-flex items-center space-x-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-75 text-white text-xs font-semibold rounded-lg shadow-sm transition">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-                <span>Edit Barang</span>
-            </button>
-
-            <!-- Delete Button -->
-            <button wire:click="confirmDeleteStock" wire:loading.attr="disabled" class="inline-flex items-center space-x-1 px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold rounded-lg transition disabled:opacity-75">
-                <svg class="w-4 h-4 text-rose-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-                <span>Hapus</span>
-            </button>
         </div>
     </div>
 
-    <!-- Cover Section -->
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-8">
-        <input type="file" wire:model="coverPhoto" id="coverPhotoInput" accept="image/*" class="hidden">
+    <!-- Filter & Search Controls -->
+    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-6 flex flex-col sm:flex-row gap-4 items-center justify-between">
+        <div class="w-full sm:w-72 relative">
+            <input aria-label="Cari stok barang" wire:model.live.debounce.300ms="search" type="text" placeholder="Cari nama barang, SKU, atau deskripsi..."
+                class="w-full pl-3.5 pr-9 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <div wire:loading wire:target="search,statusFilter" class="absolute right-3 top-2.5">
+                <svg class="animate-spin h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                </svg>
+            </div>
+        </div>
 
-        @if ($stock->cover_image_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($stock->cover_image_path))
-            <div class="relative group h-64 sm:h-80 w-full bg-slate-900 overflow-hidden">
-                <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($stock->cover_image_path) }}?v={{ time() }}" alt="Cover Barang" class="w-full h-full object-cover">
-                
-                <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center space-x-3">
-                    <button type="button" onclick="document.getElementById('coverPhotoInput').click()" class="px-4 py-2 bg-white text-slate-800 text-xs font-semibold rounded-xl shadow-lg hover:bg-slate-50 transition flex items-center space-x-1.5">
-                        <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                        <span>Ganti Cover</span>
-                    </button>
-                    <button type="button" wire:click="confirmDeleteCover" wire:loading.attr="disabled" class="px-4 py-2 bg-rose-600 text-white text-xs font-semibold rounded-xl shadow-lg hover:bg-rose-700 disabled:opacity-75 transition flex items-center space-x-1.5">
-                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                        <span>Hapus Cover</span>
-                    </button>
-                </div>
+        <div class="flex items-center space-x-3 w-full sm:w-auto">
+            <label for="list-statusFilter" class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Status:</label>
+            <select id="list-statusFilter" wire:model.live="statusFilter"
+                class="px-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                <option value="">Semua Status</option>
+                @foreach ($statuses as $status)
+                    <option value="{{ $status->value }}">{{ $status->label() }}</option>
+                @endforeach
+            </select>
+        </div>
+    </div>
+
+    <!-- Stock List Container -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        @if ($stocks->isEmpty())
+            <div class="py-16 text-center">
+                <svg class="w-12 h-12 text-slate-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+                <p class="text-base font-semibold text-slate-700">Belum ada stok barang ditemukan</p>
+                <p class="text-sm text-slate-500 mt-1">Tambahkan barang baru atau gunakan AI Generator</p>
             </div>
         @else
-            <div class="p-8 text-center bg-gradient-to-b from-slate-50 to-white flex flex-col items-center justify-center border-b border-slate-100">
-                <div class="w-14 h-14 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 mb-3 shadow-sm">
-                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                </div>
-                <h2 class="text-sm font-bold text-slate-800">Tambahkan Gambar Produk / Barang</h2>
-                <p class="text-xs text-slate-600 mt-1 max-w-sm">Mendukung format gambar PNG, JPG, GIF hingga ukuran 5MB untuk katalog barang.</p>
-                
-                <button type="button" onclick="document.getElementById('coverPhotoInput').click()" class="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl shadow-sm transition flex items-center space-x-1.5">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                    <span>Upload Cover Gambar</span>
-                </button>
+            <ul class="divide-y divide-slate-100">
+                @foreach ($stocks as $stock)
+                    <li wire:key="stock-{{ $stock->id }}" class="p-4 sm:p-5 hover:bg-slate-50/75 transition flex items-start justify-between gap-4">
+                        <div class="flex items-start space-x-3.5 flex-1 min-w-0">
+                            <!-- Quantity Adjuster (+/-) -->
+                            <div class="flex flex-col items-center bg-slate-100 rounded-lg p-1 border border-slate-200 flex-shrink-0">
+                                <button type="button" wire:click="incrementQuantity({{ $stock->id }})" title="Tambah stok" aria-label="Tambah stok {{ $stock->name }}"
+                                    class="w-7 h-6 flex items-center justify-center text-slate-600 hover:text-blue-600 hover:bg-white rounded transition">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                                </button>
+                                <span class="font-bold text-sm text-slate-800 px-1.5 py-0.5">
+                                    {{ $stock->quantity }}
+                                </span>
+                                <button type="button" wire:click="decrementQuantity({{ $stock->id }})" title="Kurangi stok" aria-label="Kurangi stok {{ $stock->name }}"
+                                    class="w-7 h-6 flex items-center justify-center text-slate-600 hover:text-rose-700 hover:bg-white rounded transition">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M20 12H4"/></svg>
+                                </button>
+                            </div>
+
+                            <div class="flex-1 min-w-0">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <a href="{{ route('stocks.show', $stock->id) }}"
+                                        class="text-base font-semibold text-slate-900 hover:text-blue-600 transition">
+                                        {{ $stock->name }}
+                                    </a>
+
+                                    <span class="px-2 py-0.5 text-xs font-semibold rounded-full border {{ $stock->status instanceof \App\Features\Stock\Enums\StockStatus ? $stock->status->badgeClass() : 'bg-slate-100 text-slate-700' }}">
+                                        {{ $stock->status instanceof \App\Features\Stock\Enums\StockStatus ? $stock->status->label() : ucfirst((string) $stock->status) }}
+                                    </span>
+
+                                    @if ($stock->sku)
+                                        <span class="px-2 py-0.5 text-xs font-mono bg-slate-100 text-slate-600 rounded">
+                                            {{ $stock->sku }}
+                                        </span>
+                                    @endif
+                                </div>
+
+                                <div class="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
+                                    <span>Satuan: <strong class="text-slate-700">{{ $stock->unit ?? 'pcs' }}</strong></span>
+                                    <span>Min Stok: <strong class="text-slate-700">{{ $stock->min_stock }}</strong></span>
+                                    @if ($stock->price !== null)
+                                        <span>Harga: <strong class="text-emerald-700">Rp {{ number_format((float) $stock->price, 0, ',', '.') }}</strong></span>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Row Actions Menu -->
+                        <div class="relative flex-shrink-0" x-data="{ open: false, loading: null }" @click.outside="open = false" @keydown.escape.window="open = false">
+                            <button type="button" @click="open = !open" :disabled="!!loading"
+                                class="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-transparent text-slate-500 hover:border-slate-200 hover:bg-white hover:text-slate-800 transition disabled:opacity-60"
+                                title="Tindakan" aria-label="Tindakan untuk {{ $stock->name }}">
+                                <svg x-show="!loading" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                                </svg>
+                                <svg x-show="loading" x-cloak class="animate-spin w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                                </svg>
+                            </button>
+
+                            <div x-show="open" x-cloak
+                                x-transition:enter="transition ease-out duration-100"
+                                x-transition:enter-start="opacity-0 scale-95"
+                                x-transition:enter-end="opacity-100 scale-100"
+                                x-transition:leave="transition ease-in duration-75"
+                                x-transition:leave-start="opacity-100 scale-100"
+                                x-transition:leave-end="opacity-0 scale-95"
+                                class="absolute right-0 z-20 mt-1.5 w-48 origin-top-right rounded-xl border border-slate-200 bg-white py-1.5 shadow-xl shadow-slate-200/70">
+                                <div class="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-600">Tindakan</div>
+
+                                <a href="{{ route('stocks.show', $stock->id) }}" @click="open = false"
+                                    class="flex w-full items-center gap-2.5 px-3 py-2 text-sm font-semibold text-sky-700 hover:bg-sky-50 transition">
+                                    <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-sky-100 text-sky-600">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                        </svg>
+                                    </span>
+                                    Lihat Detail
+                                </a>
+
+                                <button type="button" :disabled="!!loading"
+                                    @click="
+                                        loading = 'edit'; open = false;
+                                        $wire.openEditModal({{ $stock->id }}).finally(() => loading = null);
+                                    "
+                                    class="flex w-full items-center gap-2.5 px-3 py-2 text-sm font-semibold text-amber-700 hover:bg-amber-50 transition disabled:opacity-60">
+                                    <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-100 text-amber-600">
+                                        <svg x-show="loading !== 'edit'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                        </svg>
+                                        <svg x-show="loading === 'edit'" x-cloak class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                                        </svg>
+                                    </span>
+                                    <span x-text="loading === 'edit' ? 'Membuka...' : 'Edit Barang'"></span>
+                                </button>
+
+                                <div class="my-1 border-t border-slate-100"></div>
+
+                                <button type="button" :disabled="!!loading"
+                                    @click="
+                                        loading = 'delete'; open = false;
+                                        $wire.confirmDelete({{ $stock->id }});
+                                        loading = null;
+                                    "
+                                    class="flex w-full items-center gap-2.5 px-3 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-50 transition disabled:opacity-60">
+                                    <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-rose-100 text-rose-700">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                    </span>
+                                    Hapus Barang
+                                </button>
+                            </div>
+                        </div>
+                    </li>
+                @endforeach
+            </ul>
+
+            <div class="p-4 border-t border-slate-100">
+                {{ $stocks->links() }}
             </div>
         @endif
-
-        <div wire:loading wire:target="coverPhoto" class="p-3 bg-blue-50 border-t border-blue-100 text-center text-xs text-blue-700 font-semibold animate-pulse">
-            Sedang mengunggah gambar cover...
-        </div>
-        @error('coverPhoto')
-            <div class="p-3 bg-rose-50 border-t border-rose-100 text-center text-xs text-rose-700 font-medium">
-                {{ $message }}
-            </div>
-        @enderror
     </div>
 
-    <!-- Metadata Overview Cards -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-            <span class="text-xs font-semibold text-slate-600 uppercase tracking-wider block mb-1">Jumlah Stok</span>
-            <div class="text-2xl font-black text-slate-900">
-                {{ $stock->quantity }} <span class="text-sm font-medium text-slate-500">{{ $stock->unit ?? 'pcs' }}</span>
-            </div>
-        </div>
-
-        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-            <span class="text-xs font-semibold text-slate-600 uppercase tracking-wider block mb-1">Ambang Min. Stok</span>
-            <div class="text-2xl font-black text-slate-900">
-                {{ $stock->min_stock }} <span class="text-sm font-medium text-slate-500">{{ $stock->unit ?? 'pcs' }}</span>
-            </div>
-        </div>
-
-        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-            <span class="text-xs font-semibold text-slate-600 uppercase tracking-wider block mb-1">Harga Satuan</span>
-            <div class="text-xl font-bold text-emerald-700 mt-1">
-                {{ $stock->price !== null ? 'Rp ' . number_format((float) $stock->price, 0, ',', '.') : '-' }}
-            </div>
-        </div>
-
-        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-            <span class="text-xs font-semibold text-slate-600 uppercase tracking-wider block mb-1">Status Ketersediaan</span>
-            <div class="mt-1">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border {{ $stock->status instanceof \App\Features\Stock\Enums\StockStatus ? $stock->status->badgeClass() : 'bg-slate-100 text-slate-700' }}">
-                    {{ $stock->status instanceof \App\Features\Stock\Enums\StockStatus ? $stock->status->label() : ucfirst((string) $stock->status) }}
-                </span>
-            </div>
-        </div>
-    </div>
-
-    <!-- Description Viewer Section -->
-    <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-slate-200 mb-8">
-        <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
-            <div>
-                <h2 class="text-lg font-bold text-slate-900">Deskripsi & Spesifikasi Barang</h2>
-                <p class="text-xs text-slate-500 mt-0.5">Diformat dengan Markdown</p>
-            </div>
-            <button wire:click="openEditModal" class="inline-flex items-center space-x-1 px-3 py-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700 hover:bg-blue-50 border border-blue-200 rounded-lg transition">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
-                <span>Ubah Deskripsi</span>
-            </button>
-        </div>
-
-        @if (!empty($stock->description))
-            <div class="stock-description max-w-none text-sm leading-relaxed text-slate-800">
-                {!! \Illuminate\Support\Str::markdown($stock->description, [
-                    'html_input' => 'strip',
-                    'allow_unsafe_links' => false,
-                ], [new \League\CommonMark\Extension\GithubFlavoredMarkdownExtension()]) !!}
-            </div>
-        @else
-            <div class="py-12 text-center text-slate-600">
-                <svg class="w-10 h-10 mx-auto mb-2 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                <p class="text-sm font-medium text-slate-600">Belum ada deskripsi untuk barang ini</p>
-                <button wire:click="openEditModal" class="mt-4 px-3.5 py-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition">
-                    + Tambahkan Deskripsi Sekarang
-                </button>
-            </div>
-        @endif
-    </div>
-
-    <!-- Edit Stock Modal -->
-    @if ($showEditModal)
+    <!-- Create / Edit Stock Modal -->
+    @if ($showFormModal)
         <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
             <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 my-8">
                 <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-5">
-                    <h2 class="text-lg font-bold text-slate-900">Ubah Data Barang</h2>
-                    <button type="button" wire:click="closeEditModal" aria-label="Tutup" class="text-slate-500 hover:text-slate-700">
+                    <h2 class="text-lg font-bold text-slate-900">
+                        {{ $editingStockId ? 'Edit Stok Barang' : 'Tambah Barang Baru' }}
+                    </h2>
+                    <button type="button" wire:click="closeFormModal" aria-label="Tutup" class="text-slate-500 hover:text-slate-700">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
 
                 <form wire:submit.prevent="saveStock" class="space-y-4">
                     <div>
-                        <label for="edit-name" class="block text-sm font-medium text-slate-700 mb-1">Nama Barang <span class="text-rose-500">*</span></label>
-                        <input id="edit-name" wire:model="name" type="text"
+                        <label for="list-formName" class="block text-sm font-medium text-slate-700 mb-1">Nama Barang <span class="text-rose-500">*</span></label>
+                        <input id="list-formName" wire:model="formName" type="text" placeholder="Contoh: Kertas HVS A4 80gr"
                             class="w-full px-3.5 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        @error('name') <span class="text-xs text-rose-700 mt-1 block">{{ $message }}</span> @enderror
+                        @error('formName') <span class="text-xs text-rose-700 mt-1 block">{{ $message }}</span> @enderror
                     </div>
 
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label for="edit-sku" class="block text-sm font-medium text-slate-700 mb-1">SKU</label>
-                            <input id="edit-sku" wire:model="sku" type="text"
+                            <label for="list-formSku" class="block text-sm font-medium text-slate-700 mb-1">SKU / Kode</label>
+                            <input id="list-formSku" wire:model="formSku" type="text" placeholder="Contoh: ATK-001"
                                 class="w-full px-3.5 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            @error('sku') <span class="text-xs text-rose-700 mt-1 block">{{ $message }}</span> @enderror
+                            @error('formSku') <span class="text-xs text-rose-700 mt-1 block">{{ $message }}</span> @enderror
                         </div>
 
                         <div>
-                            <label for="edit-unit" class="block text-sm font-medium text-slate-700 mb-1">Satuan <span class="text-rose-500">*</span></label>
-                            <input id="edit-unit" wire:model="unit" type="text"
+                            <label for="list-formUnit" class="block text-sm font-medium text-slate-700 mb-1">Satuan <span class="text-rose-500">*</span></label>
+                            <input id="list-formUnit" wire:model="formUnit" type="text" placeholder="pcs, rim, box, botol"
                                 class="w-full px-3.5 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            @error('unit') <span class="text-xs text-rose-700 mt-1 block">{{ $message }}</span> @enderror
+                            @error('formUnit') <span class="text-xs text-rose-700 mt-1 block">{{ $message }}</span> @enderror
                         </div>
                     </div>
 
                     <div class="grid grid-cols-3 gap-3">
                         <div>
-                            <label for="edit-quantity" class="block text-sm font-medium text-slate-700 mb-1">Jumlah <span class="text-rose-500">*</span></label>
-                            <input id="edit-quantity" wire:model="quantity" type="number" min="0"
+                            <label for="list-formQuantity" class="block text-sm font-medium text-slate-700 mb-1">Jumlah <span class="text-rose-500">*</span></label>
+                            <input id="list-formQuantity" wire:model="formQuantity" type="number" min="0"
                                 class="w-full px-3.5 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            @error('quantity') <span class="text-xs text-rose-700 mt-1 block">{{ $message }}</span> @enderror
+                            @error('formQuantity') <span class="text-xs text-rose-700 mt-1 block">{{ $message }}</span> @enderror
                         </div>
 
                         <div>
-                            <label for="edit-minStock" class="block text-sm font-medium text-slate-700 mb-1">Min. Stok <span class="text-rose-500">*</span></label>
-                            <input id="edit-minStock" wire:model="minStock" type="number" min="0"
+                            <label for="list-formMinStock" class="block text-sm font-medium text-slate-700 mb-1">Min. Stok <span class="text-rose-500">*</span></label>
+                            <input id="list-formMinStock" wire:model="formMinStock" type="number" min="0"
                                 class="w-full px-3.5 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            @error('minStock') <span class="text-xs text-rose-700 mt-1 block">{{ $message }}</span> @enderror
+                            @error('formMinStock') <span class="text-xs text-rose-700 mt-1 block">{{ $message }}</span> @enderror
                         </div>
 
                         <div>
-                            <label for="edit-price" class="block text-sm font-medium text-slate-700 mb-1">Harga (Rp)</label>
-                            <input id="edit-price" wire:model="price" type="number" min="0" step="any"
+                            <label for="list-formPrice" class="block text-sm font-medium text-slate-700 mb-1">Harga (Rp)</label>
+                            <input id="list-formPrice" wire:model="formPrice" type="number" min="0" step="any" placeholder="0"
                                 class="w-full px-3.5 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            @error('price') <span class="text-xs text-rose-700 mt-1 block">{{ $message }}</span> @enderror
+                            @error('formPrice') <span class="text-xs text-rose-700 mt-1 block">{{ $message }}</span> @enderror
                         </div>
                     </div>
 
                     <div>
-                        <label for="edit-status" class="block text-sm font-medium text-slate-700 mb-1">Status Ketersediaan <span class="text-rose-500">*</span></label>
-                        <select id="edit-status" wire:model="status"
+                        <label for="list-formStatus" class="block text-sm font-medium text-slate-700 mb-1">Status Stok <span class="text-rose-500">*</span></label>
+                        <select id="list-formStatus" wire:model="formStatus"
                             class="w-full px-3.5 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
                             @foreach ($statuses as $st)
                                 <option value="{{ $st->value }}">{{ $st->label() }}</option>
                             @endforeach
                         </select>
-                        @error('status') <span class="text-xs text-rose-700 mt-1 block">{{ $message }}</span> @enderror
+                        @error('formStatus') <span class="text-xs text-rose-700 mt-1 block">{{ $message }}</span> @enderror
                     </div>
 
                     <div>
-                        <label for="edit-description" class="block text-sm font-medium text-slate-700 mb-1">Deskripsi / Spesifikasi</label>
-                        <textarea id="edit-description" wire:model="description" rows="4"
+                        <label for="list-formDescription" class="block text-sm font-medium text-slate-700 mb-1">Deskripsi / Spesifikasi</label>
+                        <textarea id="list-formDescription" wire:model="formDescription" rows="3" placeholder="Deskripsi barang..."
                             class="w-full px-3.5 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
-                        @error('description') <span class="text-xs text-rose-700 mt-1 block">{{ $message }}</span> @enderror
+                        @error('formDescription') <span class="text-xs text-rose-700 mt-1 block">{{ $message }}</span> @enderror
                     </div>
 
                     <div class="flex items-center justify-end space-x-3 pt-4 border-t border-slate-100">
-                        <button type="button" wire:click="closeEditModal"
+                        <button type="button" wire:click="closeFormModal"
                             class="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800">
                             Batal
                         </button>
                         <button type="submit"
                             class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-sm transition">
-                            Simpan Perubahan
+                            Simpan Barang
                         </button>
                     </div>
                 </form>
@@ -273,16 +343,16 @@
     @endif
 
     <!-- Delete Confirmation Modal -->
-    @if ($confirmingStockDeletion)
+    @if ($confirmingStockDeletionId)
         <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
             <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-200">
                 <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-700 flex items-center justify-center mx-auto mb-4">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
                 </div>
-                <h2 class="text-center font-bold text-slate-900 text-base mb-1">Hapus Barang Ini?</h2>
-                <p class="text-center text-sm text-slate-500 mb-6">Barang ini akan dihapus secara permanen beserta foto cover yang terkait.</p>
+                <h2 class="text-center font-bold text-slate-900 text-base mb-1">Hapus Barang?</h2>
+                <p class="text-center text-sm text-slate-500 mb-6">Barang ini akan dihapus secara permanen dari sistem inventaris.</p>
                 <div class="flex space-x-3">
-                    <button type="button" wire:click="cancelDeleteStock"
+                    <button type="button" wire:click="cancelDelete"
                         class="flex-1 py-2 rounded-lg border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50">
                         Batal
                     </button>
@@ -295,21 +365,119 @@
         </div>
     @endif
 
-    <!-- Delete Cover Confirmation Modal -->
-    @if ($confirmingCoverDeletion)
+    <!-- Import Excel Modal -->
+    @if ($showImportModal)
         <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-            <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-200">
-                <h2 class="text-center font-bold text-slate-900 text-base mb-1">Hapus Cover Barang?</h2>
-                <p class="text-center text-sm text-slate-500 mb-6">Gambar cover akan dihapus secara permanen.</p>
-                <div class="flex space-x-3">
-                    <button type="button" wire:click="cancelDeleteCover"
-                        class="flex-1 py-2 rounded-lg border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50">
-                        Batal
+            <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200">
+                <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-5">
+                    <h2 class="text-lg font-bold text-slate-900">Import Stok dari Excel</h2>
+                    <button type="button" wire:click="closeImportModal" aria-label="Tutup" class="text-slate-500 hover:text-slate-700">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
-                    <button type="button" wire:click="deleteCoverPhoto"
-                        class="flex-1 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-sm font-semibold text-white shadow-sm">
-                        Ya, Hapus
+                </div>
+
+                <form wire:submit.prevent="importExcel" class="space-y-4">
+                    <div>
+                        <label for="list-importFile" class="block text-sm font-medium text-slate-700 mb-2">Pilih File Spreadsheet (.xlsx, .xls, .csv)</label>
+                        <input id="list-importFile" wire:model="importFile" type="file" accept=".xlsx,.xls,.csv"
+                            class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                        @error('importFile') <span class="text-xs text-rose-700 mt-1 block">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div class="flex items-center justify-end space-x-3 pt-4 border-t border-slate-100">
+                        <button type="button" wire:click="closeImportModal"
+                            class="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800">
+                            Batal
+                        </button>
+                        <button type="submit" wire:loading.attr="disabled"
+                            class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-75 text-white font-semibold rounded-lg shadow-sm transition">
+                            <span wire:loading.remove wire:target="importExcel">Mulai Import</span>
+                            <span wire:loading wire:target="importExcel">Mengimpor...</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endif
+
+    <!-- AI Generator Modal -->
+    @if ($showAiModal)
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
+            <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-slate-200 my-8">
+                <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-5">
+                    <div class="flex items-center space-x-2">
+                        <span class="p-1.5 bg-purple-100 text-purple-600 rounded-lg">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                        </span>
+                        <h2 class="text-lg font-bold text-slate-900">Generate Stok dengan AI</h2>
+                    </div>
+                    <button type="button" wire:click="closeAiModal" aria-label="Tutup" class="text-slate-500 hover:text-slate-700">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label for="list-aiPrompt" class="block text-sm font-medium text-slate-700 mb-1">Permintaan / Prompt</label>
+                        <textarea id="list-aiPrompt" wire:model="aiPrompt" rows="3" placeholder="Contoh: Buatkan 5 stok perlengkapan alat tulis kantor beserta estimasi harga dan kuantitas"
+                            class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-purple-500"></textarea>
+                        @error('aiPrompt') <span class="text-xs text-rose-700 mt-1 block">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <label for="list-aiCount" class="text-sm font-medium text-slate-700">Jumlah item:</label>
+                            <input id="list-aiCount" wire:model="aiCount" type="number" min="1" max="10" class="w-16 px-2.5 py-1.5 text-sm rounded-lg border border-slate-300">
+                        </div>
+
+                        <button type="button" wire:click="generateWithAi" wire:loading.attr="disabled"
+                            class="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-75 text-white font-semibold rounded-lg text-sm shadow-sm transition flex items-center space-x-2">
+                            <svg wire:loading wire:target="generateWithAi" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                            </svg>
+                            <span wire:loading.remove wire:target="generateWithAi">Generate Sekarang</span>
+                            <span wire:loading wire:target="generateWithAi">Memproses AI...</span>
+                        </button>
+                    </div>
+
+                    @if ($aiErrorMessage)
+                        <div class="p-3 rounded-lg bg-rose-50 border border-rose-200 text-xs text-rose-700">
+                            {{ $aiErrorMessage }}
+                        </div>
+                    @endif
+
+                    @if (!empty($aiGeneratedItems))
+                        <div class="mt-4 pt-4 border-t border-slate-100">
+                            <h3 class="text-sm font-bold text-slate-800 mb-2">Pilih Item untuk Disimpan:</h3>
+                            <div class="space-y-2 max-h-60 overflow-y-auto pr-1">
+                                @foreach ($aiGeneratedItems as $index => $item)
+                                    <label class="flex items-start space-x-3 p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer">
+                                        <input type="checkbox" wire:model="aiSelectedIndices" value="{{ $index }}" class="mt-1 rounded border-slate-300 text-purple-600 focus:ring-purple-500">
+                                        <div class="flex-1 text-xs">
+                                            <p class="font-bold text-slate-900">{{ $item['name'] }} <span class="font-normal text-slate-500">({{ $item['quantity'] }} {{ $item['unit'] }})</span></p>
+                                            @if (!empty($item['sku']))
+                                                <span class="text-slate-600 font-mono text-[10px]">SKU: {{ $item['sku'] }}</span>
+                                            @endif
+                                            @if (!empty($item['description']))
+                                                <p class="text-slate-500 mt-0.5">{{ $item['description'] }}</p>
+                                            @endif
+                                        </div>
+                                    </label>
+                                @endforeach
+                            </div>
+
+                            <div class="flex items-center justify-end space-x-3 mt-4 pt-3 border-t border-slate-100">
+                                <button type="button" wire:click="closeAiModal" class="px-4 py-2 text-sm text-slate-600 hover:text-slate-800">
+                                    Batal
+                                </button>
+                                <button type="button" wire:click="saveAiGenerated"
+                                    class="px-5 py-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg text-sm shadow-sm transition">
+                                    Simpan Item Terpilih
+                                </button>
+                            </div>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
